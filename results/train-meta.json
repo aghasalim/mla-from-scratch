@@ -1,0 +1,19 @@
+{
+ "steps": 1500,
+ "seq": 128,
+ "batch": 24,
+ "d_model": 192,
+ "layers": 4,
+ "heads": 6,
+ "lr": 0.003,
+ "eval_every": 250,
+ "eval_iters": 20,
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "wall_clock_s": 1904.3106328330032,
+ "torch": "2.13.0",
+ "device": "cpu"
+}

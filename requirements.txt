@@ -1,0 +1,9 @@
+# MLA is a memory-accounting project. Everything here runs on CPU.
+torch
+numpy
+matplotlib
+pandas
+
+# dev
+pytest
+ruff
