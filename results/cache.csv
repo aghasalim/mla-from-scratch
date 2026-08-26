@@ -1,0 +1,13 @@
+config,variant,elem_per_token_per_layer,layers,reduction_vs_mha,gb_at_128k_fp16
+deepseek-v2-ish,MHA,8192,60,1.0,120.0
+deepseek-v2-ish,GQA(g=2),4096,60,2.0,60.0
+deepseek-v2-ish,GQA(g=4),2048,60,4.0,30.0
+deepseek-v2-ish,GQA(g=8),1024,60,8.0,15.0
+deepseek-v2-ish,MQA,256,60,32.0,3.75
+deepseek-v2-ish,MLA,576,60,14.222222222222221,8.4375
+deepseek-v2-ish,MLA (no decoupled RoPE),512,60,16.0,7.5
+this-repo,MHA,384,4,1.0,0.375
+this-repo,GQA(g=2),192,4,2.0,0.1875
+this-repo,MQA,64,4,6.0,0.0625
+this-repo,MLA,64,4,6.0,0.0625
+this-repo,MLA (no decoupled RoPE),48,4,8.0,0.046875
