@@ -181,9 +181,9 @@ tests/             26 tests
 Related: [flash-attention-from-scratch](https://github.com/aghasalim/flash-attention-from-scratch)
 attacks the same memory wall from the kernel side rather than the architecture side.
 
-## Conventions
+## Methodology
 
-Shared rules in [`CONVENTIONS.md`](CONVENTIONS.md). Rule 12, report variance not
+The rules this follows are in [`METHODOLOGY.md`](METHODOLOGY.md). Rule 12, report variance not
 just the point estimate, is the reason the quality section says what it says.
 
 ## Author
