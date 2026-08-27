@@ -14,6 +14,11 @@ def main() -> int:
     cache = list(csv.DictReader((ROOT / "results" / "cache.csv").open()))
     qual = list(csv.DictReader((ROOT / "results" / "quality.csv").open()))
     body = (ROOT / "README.md").read_text()
+    # Detail moved out of the README lives in notes/METHODS.md. A figure quoted
+    # there is still a quoted figure and still has to match its source.
+    _methods = ROOT / "notes" / "METHODS.md"
+    if _methods.exists():
+        body += "\n" + _methods.read_text()
     claims, failures = [], []
 
     for r in cache:
