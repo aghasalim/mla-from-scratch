@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: If you use this work, please cite it as below.
+title: "Multi-head Latent Attention from scratch"
+abstract: "Multi-head latent attention from DeepSeek-V2, including decoupled RoPE and absorbed inference verified numerically equal to the naive form."
+type: software
+authors:
+  - family-names: Mustafazada
+    given-names: Aghasalim
+    orcid: "https://orcid.org/0009-0001-8746-4582"
+    affiliation: "Howest University of Applied Sciences"
+repository-code: "https://github.com/aghasalim/mla-from-scratch"
+url: "https://aghasalim.github.io/"
+license: MIT
+date-released: "2026-08-27"
+version: "1.0.0"
+keywords:
+  - multi-head latent attention
+  - KV cache
+  - RoPE
+  - transformers
+  - inference optimisation
