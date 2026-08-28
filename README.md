@@ -89,16 +89,34 @@ folding were wrong both versions would still produce plausible attention output,
 so this test is the only thing that can catch it.
 
 ## Quality at matched budget, and why this part is weak
-Six variants, same depth, width, data, batch, steps and seed, only the attention module changing.
+
+Six variants, same depth, width, data, batch, steps and seed, only the attention
+module changing. The six do not separate. All 18 runs land between 4.50 and 4.60
+validation perplexity: the spread between variant medians is 0.081, the mean
+spread between seeds of one variant is 0.058, and a ratio of 1.41 is not enough
+to call anything. At the matched budget of 256 elements per token MQA scores
+4.538 and MLA 4.563, a gap of 0.025 while MLA's own three seeds span 0.080. MHA
+carries six times the cache of MQA and still cannot beat it, which is the sign
+that the experiment is the limit here and not the method.
 
 ![quality against cache budget](results/quality.png)
 ![validation curves](results/curves.png)
 
 Full detail in [notes/METHODS.md](notes/METHODS.md#quality-at-matched-budget-and-why-this-part-is-weak).
+
 ## What I got wrong
-**I assumed the quality experiment would show something.** I built the whole matched budget comparison before checking whether the setup had the resolution to detect the effect.
+
+**I assumed the quality experiment would show something.** I built the whole
+matched budget comparison before checking whether the setup had the resolution
+to detect the effect. Estimating seed noise first would have cost about ten
+minutes and shown that 0.058 of noise buries the 0.025 gap I was looking for, so
+the 32 minute sweep went on a table that cannot answer its own question. The
+other one is that I nearly shipped `AbsorbedMLA` with no equality test against
+the naive path. It produced sensible looking attention from the first run, and
+the einsum index order in that first version was wrong.
 
 Full detail in [notes/METHODS.md](notes/METHODS.md#what-i-got-wrong).
+
 ## Running it
 
 ```bash
