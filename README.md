@@ -50,6 +50,13 @@ MQA is smaller still, which is the point of the quality question below: MQA
 already gives you 32x, so MLA only earns its complexity if it holds quality
 better at the same budget.
 
+![KV cache filling as the context grows, full cache against the latent cache](results/cache-growth.gif)
+
+The same arithmetic as the table, watched as the context fills. Shape is held
+fixed at the DeepSeek V2 numbers (32 heads of width 128, d_c=512, d_rope=64,
+60 layers, fp16) and only the sequence length moves. The dashed line is one
+80 GB H100.
+
 ## Absorption, and why RoPE breaks it
 
 MLA caches `c_n = W_DKV x_n` and reconstructs `k_n = W_UK c_n`. The content
