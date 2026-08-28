@@ -1,7 +1,7 @@
 # Logbook
 
 ## 2026-08-26, absorbed inference agrees with the naive form to 6e-07
-**Tried:** implemented MLA twice.`naive.py` reconstructs K and V from the latent so the maths is readable;`absorbed.py` folds W_UK into W_Q and W_UV into W_O so neither is ever materialised. Then asserted they agree across d_c in {48, 96, 192} and sequence lengths {1, 7, 48}.
+**Tried:** implemented MLA twice. `naive.py` reconstructs K and V from the latent so the maths is readable; `absorbed.py` folds W_UK into W_Q and W_UV into W_O so neither is ever materialised. Then asserted they agree across d_c in {48, 96, 192} and sequence lengths {1, 7, 48}.
 **Measured:** max absolute difference 5.96e-07, relative 8.77e-07.
 **Concluded:** the folding is right. Worth noting how weak the alternative evidence was: the absorbed version produced sensible looking attention output from the first run, and the first einsum index order I wrote was wrong. Nothing except the equality assertion could have told me. Also added a hard refusal: constructing AbsorbedMLA from a model without decoupled RoPE raises, because a position dependent rotation between the query and W_UK cannot be folded into a fixed matrix and silently absorbing it would produce a plausible wrong answer.
 
