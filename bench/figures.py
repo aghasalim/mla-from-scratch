@@ -179,10 +179,20 @@ def fig_curves(out: Path) -> Path:
                     linestyle=DASH.get(v, "-"), zorder=3,
                     label=v if ax is a else None)
         ax.set_xlabel("training step")
-    a.set_ylabel("validation loss (nats per character)")
+        # Both panels plot the same quantity, but the right one runs over a
+        # tenth of the range. Without the label on both, the right ticks read
+        # as some other measurement.
+        ax.set_ylabel("validation loss (nats per character)")
     tail = t[t["step"] >= zoom_from]["val_loss"]
     b.set_ylim(tail.min() - 0.01, tail.max() + 0.01)
     b.set_xlim(zoom_from - 30, t["step"].max() + 30)
+
+    # Shade the slice the right panel redraws, so which panel is which does not
+    # depend on the reader comparing tick values across the two.
+    a.axvspan(zoom_from, t["step"].max(), color="#f0f0f0", zorder=0)
+    a.text(zoom_from + 25, 0.97, "the right panel zooms this slice",
+           transform=blended_transform_factory(a.transData, a.transAxes),
+           fontsize=9, color="#5a5a5a", va="top")
 
     titled(a, "Every variant learns the same curve",
            "Median of 3 seeds, the seeds themselves faint underneath.")

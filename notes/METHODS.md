@@ -19,7 +19,7 @@ module changing. Character level Shakespeare, 4 layers, 192 wide, 1500 steps,
 | MLA(d_c=48) | 256 | 6.0x | 4.563 | 4.520 to 4.600 |
 | MLA(d_c=96) | 448 | 3.4x | 4.581 | 4.514 to 4.591 |
 
-![quality against cache budget](results/quality.png)
+![quality against cache budget](../results/quality.png)
 
 **Nothing is separated.** The spread between variant medians is 0.081. The mean
 spread between seeds of the same variant is 0.058. The ratio is 1.41, which is
@@ -30,7 +30,7 @@ At matched budget, MQA scores 4.538 and MLA 4.563, a difference of 0.025 while
 MLA's own seeds span 0.080. So the comparison the whole repo exists to make
 comes out as a shrug.
 
-![validation curves](results/curves.png)
+![validation curves](../results/curves.png)
 
 I am not going to dress this up. Reading it as "cache design does not matter"
 would be wrong in the other direction: the model is 1.7M parameters on 1M
