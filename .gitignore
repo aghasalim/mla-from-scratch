@@ -12,3 +12,8 @@ dist/
 
 # results/ is deliberately NOT ignored -- benchmark CSVs are committed so the
 # README tables stay reproducible.
+
+# build products of the verification implementations
+verify/*/target/
+verify/gocheck/gocheck
+mla_kernel

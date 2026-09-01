@@ -18,8 +18,56 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
       - name: Lint
-        run: ruff check mla/ bench/ tests/ train/ scripts/
+        run: ruff check mla/ bench/ tests/ train/ scripts/ verify/
       - name: Test
         run: python -m pytest tests/ -q
       - name: Check quoted numbers against results/
         run: python scripts/check_numbers.py
+      - name: Golden vectors still match mla/
+        run: python verify/export_golden.py --check
+
+  differential:
+    # Recompute the published numbers in SQL, C, Go, R and Rust and require them
+    # to agree. See verify/verify.sh and the README section on it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: R, if the runner does not already have it
+        run: |
+          command -v Rscript || {
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends r-base-core
+          }
+      - name: Toolchains
+        run: |
+          sqlite3 --version && cc --version | head -1 && go version
+          cargo --version && Rscript --version
+      - name: Verify
+        run: ./verify/verify.sh
+      - name: The checks have to be able to fail
+        # A check that cannot reject anything is not a check. Corrupt each of
+        # the two files the implementations read, require rejection, restore,
+        # require a pass again.
+        run: |
+          set -e
+          cp results/cache.csv /tmp/cache.csv
+          cp verify/golden/mla_golden.txt /tmp/golden.txt
+
+          sed -i 's/,14.222222222222221,8.4375/,14.222222222222221,8.4400/' results/cache.csv
+          if ./verify/verify.sh > /tmp/out.txt 2>&1; then
+            cat /tmp/out.txt
+            echo "a corrupted results/cache.csv was accepted"; exit 1
+          fi
+          grep -q 'MISMATCH deepseek-v2-ish MLA' /tmp/out.txt
+          cp /tmp/cache.csv results/cache.csv
+
+          # one weight of W^UK, moved by 1e-3
+          grep -q '0.011813255026936531' verify/golden/mla_golden.txt
+          sed -i 's/0.011813255026936531/0.012813255026936531/' verify/golden/mla_golden.txt
+          if ./verify/verify.sh > /tmp/out.txt 2>&1; then
+            cat /tmp/out.txt
+            echo "a corrupted golden vector file was accepted"; exit 1
+          fi
+          cp /tmp/golden.txt verify/golden/mla_golden.txt
+
+          ./verify/verify.sh
