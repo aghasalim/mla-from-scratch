@@ -32,9 +32,9 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from mla.absorbed import AbsorbedMLA  # noqa: E402
-from mla.naive import MLA  # noqa: E402
-from mla.rope import rope_frequencies  # noqa: E402
+from mla.absorbed import AbsorbedMLA
+from mla.naive import MLA
+from mla.rope import rope_frequencies
 
 CFG = {"d_model": 32, "n_heads": 4, "d_head": 8, "d_c": 24, "d_rope": 8,
        "seq": 12, "batch": 2}
