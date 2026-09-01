@@ -136,7 +136,17 @@ def check(scalars, tensors) -> int:
         bad.append(f"config {cfg} in the file, {CFG} in this script")
     for k, v in scalars.items():
         got = old_scalars.get(k)
-        if got is None or abs(got - v) > max(CHECK_TOL * abs(v), 1e-12):
+        if got is None:
+            bad.append(f"scalar {k} missing from the file")
+        elif k.startswith("torch_"):
+            # These two measure how far float32 accumulation moves the two
+            # forward passes apart. That is machine dependent: this laptop and
+            # the CI runner give 8.3e-07 and 7.7e-07 for the same grid. So the
+            # check is that it stays the same size and stays small, not that it
+            # is the same number.
+            if not (0.5 * got <= v <= 2.0 * got) or v > CHECK_TOL:
+                bad.append(f"scalar {k}: file has {got:.3e}, torch now gives {v:.3e}")
+        elif abs(got - v) > max(CHECK_TOL * abs(v), 1e-12):
             bad.append(f"scalar {k}: file has {got}, torch now gives {v!r}")
     for name, t in tensors.items():
         fresh = t.detach().float().reshape(-1).tolist()

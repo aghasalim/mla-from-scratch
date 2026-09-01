@@ -85,9 +85,11 @@ wrong.
 **The check that matters:** absorbed inference is asserted to be numerically
 identical to the naive form, across three latent widths and three sequence
 lengths including 1. Measured agreement is 8.3e-07 max absolute difference, the
-worst case over that grid. If the folding were wrong both versions would still
-produce plausible attention output, so this test is the only thing that can
-catch it.
+worst case over that grid on this laptop, and 7.7e-07 on the CI runner. That
+spread is float32 accumulating in a different order, not error: in double
+precision the two paths agree to 3.9e-16, which the C in `verify/` measures. If
+the folding were wrong both versions would still produce plausible attention
+output, so this test is the only thing that can catch it.
 
 ## Quality at matched budget, and why this part is weak
 
@@ -150,9 +152,12 @@ toolchain is missing, so a partial install still runs the rest.
 
 **It found a wrong number.** This README said the absorbed and naive paths agree
 to 6e-07. Recomputed over the same grid the test suite uses, three latent widths
-by three sequence lengths, the worst case is 8.345e-07 on torch 2.13.0. The
-figure above is now the measured one, and the Go check compares what the README
-quotes against the golden file, so it cannot drift again quietly.
+by three sequence lengths, the worst case is 8.345e-07 on this laptop with torch
+2.13.0, and 7.749e-07 on the CI runner. The figure above is now the measured one,
+and the Go check compares what the README quotes against the golden file, so it
+cannot drift again quietly. The float32 figure is machine dependent, so the
+staleness check on the golden file requires it to stay the same size rather than
+to stay the same number.
 
 **The C and the Rust agree to every digit they print.** Both work in double
 precision against float32 golden vectors, so 1.103e-07 and 1.517e-07 are the
