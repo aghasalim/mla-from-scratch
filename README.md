@@ -12,7 +12,9 @@ reconstructing keys and values entirely.
 Two results here, and they are of very different strength. The cache accounting
 is exact and large. The quality comparison is a null, and I think the honest
 reading is that my experiment is too small to see the effect rather than that
-the effect is absent.
+the effect is absent. Both are recomputed from the committed results and the
+golden vectors by independent implementations in `verify/`, and CI fails if any
+of them disagree.
 
 ## The problem
 
@@ -120,78 +122,6 @@ the einsum index order in that first version was wrong.
 
 Full detail in [notes/METHODS.md](notes/METHODS.md#what-i-got-wrong).
 
-## Everything here is computed twice
-
-Every number here came out of exactly one implementation. The cache table came
-out of `bench/cache.py`, the perplexity statistics out of one pass over
-`results/quality.csv` that I did by hand, and the claim that absorbed MLA equals
-the naive form out of the same PyTorch that produces both sides of it. If any of
-those were wrong, nothing downstream would notice, because everything downstream
-reads the same output. The tests checked that the code ran, not that it was
-right.
-
-So the published numbers are recomputed by five independent implementations in
-five languages, and CI fails if any two disagree. For the kernel that means
-golden vectors: `verify/export_golden.py` writes the weights, the input and both
-output tensors to
-[`verify/golden/mla_golden.txt`](verify/golden/mla_golden.txt), and the C and the
-Rust have to reproduce the outputs from the weights alone, with no access to the
-Python at all.
-
-| implementation | what it recomputes | measured agreement |
-| --- | --- | --- |
-| [`verify/cache.sql`](verify/cache.sql) | all 12 rows of `results/cache.csv`, from n_heads, d_head, d_c, d_rope and layers, in SQLite | exact to 1e-10, 12 rows of 12 |
-| [`verify/mla_kernel.c`](verify/mla_kernel.c) | the whole MLA forward pass, naive and absorbed, from the golden weights, tensors resolved by name | 1.103e-07 naive, 1.517e-07 absorbed |
-| [`verify/gocheck`](verify/gocheck) | structure of every results CSV, val_ppl against exp(val_loss), cache/token from the shape in `train-meta.json` | val_ppl to 8.9e-16, cache/token exact for all 18 runs |
-| [`verify/verify.R`](verify/verify.R) | the nine perplexity statistics that exist only in this prose, plus a permutation test | all nine inside the rounding of the figure quoted |
-| [`verify/absorption`](verify/absorption) | the golden vectors again, plus the absorption identity over 50,000 random shapes | 1.103e-07 and 1.517e-07, the same as the C |
-
-Run them all with [`./verify/verify.sh`](verify/verify.sh), which prints
-`5 passed, 0 failed, 0 skipped` here. Each check is skipped with a message if its
-toolchain is missing, so a partial install still runs the rest.
-
-**It found a wrong number.** This README said the absorbed and naive paths agree
-to 6e-07. Recomputed over the same grid the test suite uses, three latent widths
-by three sequence lengths, the worst case is 8.345e-07 on this laptop with torch
-2.13.0, and 7.749e-07 on the CI runner. The figure above is now the measured one,
-and the Go check compares what the README quotes against the golden file, so it
-cannot drift again quietly. The float32 figure is machine dependent, so the
-staleness check on the golden file requires it to stay the same size rather than
-to stay the same number.
-
-**The C and the Rust agree to every digit they print.** Both work in double
-precision against float32 golden vectors, so 1.103e-07 and 1.517e-07 are the
-width of float32 on the PyTorch side rather than error in either kernel. Inside
-double precision the absorption identity is exact: the C measures its own naive
-path against its own absorbed path at 3.886e-16.
-
-**The Rust asks the question the test suite could not afford.** `tests/` asserts
-naive equals absorbed on nine fixed shapes with one seed. Absorption is algebra,
-so it should hold for every shape, and a fault that only appears at n_heads=1 or
-seq=1 would pass those nine. 50,000 random draws over n_heads 1 to 4, d_head 2 to
-8, d_c 2 to 13, d_rope 2 to 8 and seq 1 to 8, with the crate's own xorshift
-generator and no dependencies: worst disagreement 7.105e-15.
-
-**The R runs the test the quality section argues for in words.** If the variant
-labels carry no information, how often does a random relabelling of the same 18
-runs produce a spread between medians as large as the observed 0.081? Over 20,000
-relabellings the median spread is 0.062 and p = 0.07. That is the quantitative
-form of "nothing is separated", and it was missing.
-
-**The harness is checked too.** CI moves one GB figure in `results/cache.csv`,
-requires the SQL to reject it, restores it, and requires a pass; then moves one
-weight of W^UK in the golden file by 1e-3, which the C and the Rust both reject
-at 1.894e-05 against their 1e-05 tolerance. Locally I also confirmed the rest of
-the coverage: perturbing one `val_ppl` by 0.01 is caught by Go, which recomputes
-it from `val_loss`, and by R, which sees the seed spread move; a ragged row, a
-NaN, and a wrong `cache_per_token` are caught by Go; a perturbed `out_absorbed`
-in the golden file is caught by the C and the Rust while the naive comparison
-still passes.
-
-Five languages and not more. This repository publishes a cache table, a set of
-perplexity statistics and one kernel, and a sixth implementation of something
-already computed three times would be decoration rather than evidence.
-
 ## Running it
 
 ```bash
@@ -228,7 +158,7 @@ mla/absorbed.py    MLA with the up projections folded away, asserted equal to na
 bench/cache.py     exact cache accounting
 train/             the small char LM and the matched budget sweep
 tests/             26 tests
-verify/            the same numbers recomputed in SQL, C, Go, R and Rust
+verify/            the same numbers, recomputed independently
 ```
 
 ## Sources
