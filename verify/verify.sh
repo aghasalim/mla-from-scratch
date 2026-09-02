@@ -60,6 +60,8 @@ run "C, MLA kernel"             cc      check_c
 run "Go, file validation"       go      check_go
 run "R, quality statistics"     Rscript Rscript verify/verify.R "$root"
 run "Rust, absorption identity" cargo   check_rust
+run "Ruby, quality statistics"  ruby    ruby verify/verify.rb "$root"
+run "JS, cache accounting"      node    node verify/verify.mjs "$root"
 
 printf '\n%s\n' "----------------------------------------"
 printf '%d passed, %d failed, %d skipped\n' "$pass" "$fail" "$skip"
