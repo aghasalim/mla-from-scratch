@@ -148,7 +148,7 @@ python -m bench.figures
 
 The training sweep takes about 32 minutes on an M4 CPU. `bench.cache` is instant
 because it is arithmetic. Figures read the committed CSVs and never re measure.
-What the 18 runs were configured with is in [notes/TRAINING.md](notes/TRAINING.md).
+What the 18 runs were configured with is in [notes/RECIPE.md](notes/RECIPE.md).
 
 ## Where things live
 
