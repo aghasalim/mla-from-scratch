@@ -1,4 +1,4 @@
-# mla-from-scratch
+# The KV cache is the wall. MLA is one way through it.
 
 [![ci](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -12,9 +12,9 @@ reconstructing keys and values entirely.
 Two results here, and they are of very different strength. The cache accounting
 is exact and large. The quality comparison is a null, and I think the honest
 reading is that my experiment is too small to see the effect rather than that
-the effect is absent. Both are recomputed from the committed results and the
-golden vectors by independent implementations in `verify/`, and CI fails if any
-of them disagree.
+the effect is absent. Neither is taken on trust. The committed results and the
+golden vectors get rebuilt from the raw shape parameters in C, Rust, Go, R, SQL,
+Ruby and JavaScript under `verify/`, and one disagreement anywhere turns CI red.
 
 ## The problem
 
@@ -109,7 +109,7 @@ that the experiment is the limit here and not the method.
 
 Full detail in [notes/METHODS.md](notes/METHODS.md#quality-at-matched-budget-and-why-this-part-is-weak).
 
-## What I got wrong
+## Two things I got wrong
 
 **I assumed the quality experiment would show something.** I built the whole
 matched budget comparison before checking whether the setup had the resolution
@@ -120,9 +120,10 @@ other one is that I nearly shipped `AbsorbedMLA` with no equality test against
 the naive path. It produced sensible looking attention from the first run, and
 the einsum index order in that first version was wrong.
 
-Full detail in [notes/METHODS.md](notes/METHODS.md#what-i-got-wrong).
+Both mistakes are written up at length in
+[notes/METHODS.md](notes/METHODS.md#what-i-got-wrong).
 
-## Running it
+## Reproducing this
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
@@ -148,7 +149,7 @@ python -m bench.figures
 The training sweep takes about 32 minutes on an M4 CPU. `bench.cache` is instant
 because it is arithmetic. Figures read the committed CSVs and never re measure.
 
-## Layout
+## Where things live
 
 ```
 mla/rope.py        RoPE, and the explanation of why it breaks absorption
@@ -158,10 +159,10 @@ mla/absorbed.py    MLA with the up projections folded away, asserted equal to na
 bench/cache.py     exact cache accounting
 train/             the small char LM and the matched budget sweep
 tests/             26 tests
-verify/            the same numbers, recomputed independently
+verify/            seven other languages, arriving at the same numbers
 ```
 
-## Sources
+## Papers
 
 - **DeepSeek-AI. DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model. 2024.** [arXiv:2405.04434](https://arxiv.org/abs/2405.04434) MLA, decoupled RoPE, and the absorption argument. Section 2.1 is the load bearing part.
 - **Su, Lu, Pan, Murtadha, Wen, Liu. RoFormer: Enhanced Transformer with Rotary Position Embedding. 2021.** [arXiv:2104.09864](https://arxiv.org/abs/2104.09864) RoPE itself, and the relative position property tested here.
@@ -175,24 +176,10 @@ attacks the same memory wall from the kernel side rather than the architecture s
 
 ## Methodology
 
-The rules this follows are in [`METHODOLOGY.md`](METHODOLOGY.md). Rule 12, report variance not
-just the point estimate, is the reason the quality section says what it says.
-
-## Author
-
-Aghasalim Mustafazada, third year AI student at Howest, Belgium.
-
-<p align="center">
-  <a href="https://github.com/aghasalim">
-    <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="github"></a>
-  <a href="https://www.kaggle.com/aghasalimmustafazada">
-    <img src="https://img.shields.io/badge/Kaggle-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white" alt="kaggle"></a>
-  <a href="https://linkedin.com/in/mustafazada">
-    <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="linkedin"></a>
-  <a href="https://orcid.org/0009-0001-8746-4582">
-    <img src="https://img.shields.io/badge/ORCID-A6CE39?style=for-the-badge&logo=orcid&logoColor=white" alt="orcid"></a>
-</p>
+[`METHODOLOGY.md`](METHODOLOGY.md) has the standing rules. Rule 12 is the one
+doing work here: report the spread, not only the point estimate. Follow it and
+the quality table has to be called a null, which is what the section above does.
 
 ## License
 
-MIT, see [LICENSE](LICENSE).
+MIT. Full text in [LICENSE](LICENSE).
