@@ -45,7 +45,7 @@ jobs:
       - name: Verify
         run: ./verify/verify.sh
       - name: The checks have to be able to fail
-        # A check that cannot reject anything is not a check. Corrupt each of
+        # A check that cannot fail is not a check. Corrupt each of
         # the two files the implementations read, require rejection, restore,
         # require a pass again.
         run: |
