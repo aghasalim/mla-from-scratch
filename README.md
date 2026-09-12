@@ -177,7 +177,7 @@ attacks the same memory wall from the kernel side rather than the architecture s
 
 ## Methodology
 
-[`METHODOLOGY.md`](METHODOLOGY.md) has the standing rules. Rule 12 is the one
+[`METHODOLOGY.md`](METHODOLOGY.md) has the standing rules. Rule 10 is the one
 doing work here: report the spread, not only the point estimate. Follow it and
 the quality table has to be called a null, which is what the section above does.
 
