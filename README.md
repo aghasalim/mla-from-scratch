@@ -10,8 +10,7 @@ compression, decoupled RoPE, and the absorption trick that lets inference skip
 reconstructing keys and values entirely.
 
 Two results here, and they are of very different strength. The cache accounting
-is exact and large. The quality comparison is a null, and I think the honest
-reading is that my experiment is too small to see the effect, not that
+is exact and large. The quality comparison is a null, and I think the right reading is that my experiment is too small to see the effect, not that
 the effect is absent. Neither is taken on trust. The committed results and the
 golden vectors get rebuilt from the raw shape parameters in C, Rust, Go, R, SQL,
 Ruby and JavaScript under `verify/`, and one disagreement anywhere turns CI red.
@@ -173,7 +172,7 @@ verify/            seven other languages, arriving at the same numbers
 - Corpus is tiny Shakespeare, from Karpathy's char-rnn.
 
 Related: [flash-attention-from-scratch](https://github.com/aghasalim/flash-attention-from-scratch)
-attacks the same memory wall from the kernel side instead of the architecture side.
+attacks the same memory wall from the kernel side.
 
 ## Methodology
 
