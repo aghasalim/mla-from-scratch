@@ -38,7 +38,7 @@ neighbouring weight matrices so inference never decompresses.
 | **MLA** | **576** | **14.22x** | **8.44** |
 | MLA without decoupled RoPE | 512 | 16.00x | 7.50 |
 
-These are arithmetic, not measurements, so there is no error bar. MLA is
+These are arithmetic, so there is no error bar. MLA is
 `d_c + d_rope = 512 + 64`.
 
 The last row is the price of decoupled RoPE: 64 extra elements per token, 0.94 GB
@@ -80,8 +80,7 @@ compressed, apply RoPE only there, and leave the compressed path rotation free.
 The score becomes a sum of an absorbed content term and a small positional term.
 
 This repo implements both, and `AbsorbedMLA` refuses to construct itself from a
-model that does not use decoupled RoPE, not silently folding something
-wrong.
+model that does not use decoupled RoPE, so it cannot silently fold something wrong.
 
 **The check that matters:** absorbed inference is asserted to be numerically
 identical to the naive form, across three latent widths and three sequence
@@ -177,7 +176,7 @@ attacks the same memory wall from the kernel side.
 ## Methodology
 
 [`METHODOLOGY.md`](METHODOLOGY.md) has the standing rules. Rule 10 is the one
-doing work here: report the spread, not only the point estimate. Follow it and
+doing work here: report the spread as well as the point estimate. Follow it and
 the quality table has to be called a null, which is what the section above does.
 
 ## License
