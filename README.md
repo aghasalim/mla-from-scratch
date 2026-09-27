@@ -11,7 +11,7 @@ reconstructing keys and values entirely.
 
 Two results here, and they are of very different strength. The cache accounting
 is exact and large. The quality comparison is a null, and I think the honest
-reading is that my experiment is too small to see the effect rather than that
+reading is that my experiment is too small to see the effect, not that
 the effect is absent. Neither is taken on trust. The committed results and the
 golden vectors get rebuilt from the raw shape parameters in C, Rust, Go, R, SQL,
 Ruby and JavaScript under `verify/`, and one disagreement anywhere turns CI red.
@@ -81,7 +81,7 @@ compressed, apply RoPE only there, and leave the compressed path rotation free.
 The score becomes a sum of an absorbed content term and a small positional term.
 
 This repo implements both, and `AbsorbedMLA` refuses to construct itself from a
-model that does not use decoupled RoPE rather than silently folding something
+model that does not use decoupled RoPE, not silently folding something
 wrong.
 
 **The check that matters:** absorbed inference is asserted to be numerically
@@ -111,7 +111,7 @@ Full detail in [notes/METHODS.md](notes/METHODS.md#quality-at-matched-budget-and
 
 ## Two things I got wrong
 
-**I assumed the quality experiment would show something.** I built the whole
+I assumed the quality experiment would show something. I built the whole
 matched budget comparison before checking whether the setup had the resolution
 to detect the effect. Estimating seed noise first would have cost about ten
 minutes and shown that 0.058 of noise buries the 0.025 gap I was looking for, so
@@ -173,7 +173,7 @@ verify/            seven other languages, arriving at the same numbers
 - Corpus is tiny Shakespeare, from Karpathy's char-rnn.
 
 Related: [flash-attention-from-scratch](https://github.com/aghasalim/flash-attention-from-scratch)
-attacks the same memory wall from the kernel side rather than the architecture side.
+attacks the same memory wall from the kernel side instead of the architecture side.
 
 ## Methodology
 
