@@ -49,7 +49,7 @@ def apply_rope(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
     return out.type_as(x)
 
 
-def relative_score_is_position_invariant(dim=64, seq=16, theta=10_000.0) -> float:
+def relative_score_is_position_invariant(dim: int = 64, seq: int = 16, theta: float = 10_000.0) -> float:
     """Check RoPE's defining property, and return the largest deviation.
 
     Two query/key pairs with the same offset must score identically regardless
