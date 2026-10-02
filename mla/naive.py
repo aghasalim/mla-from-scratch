@@ -57,7 +57,7 @@ class MLA(nn.Module):
         """The latent, plus the shared rope key if decoupled RoPE is on."""
         return self.d_c + self.d_rope
 
-    def forward(self, x, freqs, causal=True):
+    def forward(self, x: torch.Tensor, freqs: torch.Tensor, causal: bool = True) -> torch.Tensor:
         b, s, _ = x.shape
         c = self.w_dkv(x)                                             # (b, s, d_c)
         k = self.w_uk(c).view(b, s, self.n_heads, self.d_head).transpose(1, 2)

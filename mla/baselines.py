@@ -45,7 +45,7 @@ class GroupedAttention(nn.Module):
         """K and V, one vector each per KV head."""
         return 2 * self.n_kv_heads * self.d_head
 
-    def forward(self, x, freqs, causal=True):
+    def forward(self, x: torch.Tensor, freqs: torch.Tensor, causal: bool = True) -> torch.Tensor:
         b, s, _ = x.shape
         q = self.wq(x).view(b, s, self.n_heads, self.d_head).transpose(1, 2)
         k = self.wk(x).view(b, s, self.n_kv_heads, self.d_head).transpose(1, 2)
