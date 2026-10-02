@@ -24,7 +24,7 @@ CONFIGS = {
 }
 
 
-def variants(cfg):
+def variants(cfg: dict) -> list[tuple[str, int]]:
     n, d = cfg["n_heads"], cfg["d_head"]
     out = [("MHA", 2 * n * d)]
     for g in (2, 4, 8):
