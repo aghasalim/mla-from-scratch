@@ -47,6 +47,7 @@ def main() -> int:
               f"{'GB @ 128k ctx, fp16':>20}")
         for v, per in variants(cfg):
             base = base or per
+            # 131_072 tokens is the 128k context, 2 is bytes per fp16 element
             gb = per * cfg["layers"] * 131_072 * 2 / 2**30
             print(f"  {v:24} {per:17} {base / per:7.2f}x {gb:19.2f}")
             rows.append({"config": name, "variant": v, "elem_per_token_per_layer": per,
