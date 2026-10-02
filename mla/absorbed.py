@@ -66,7 +66,7 @@ class AbsorbedMLA(nn.Module):
     def cache_elements_per_token(self) -> int:
         return self.src.cache_elements_per_token()
 
-    def forward(self, x, freqs, causal=True):
+    def forward(self, x: torch.Tensor, freqs: torch.Tensor, causal: bool = True) -> torch.Tensor:
         b, s, _ = x.shape
         src = self.src
         c = src.w_dkv(x)                                              # (b, s, d_c)
