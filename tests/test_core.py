@@ -36,6 +36,11 @@ def test_rope_score_depends_only_on_relative_offset():
     for offset in (1, 3, 7):
         scores = [(r[0, 0, m + offset] @ r[0, 0, m]).item() for m in range(32 - offset)]
         assert max(scores) - min(scores) < 1e-3, f"offset {offset} not position invariant"
+    # the checks above also pass if apply_rope returns x unchanged, so require
+    # that it actually rotates and that the score moves with the offset
+    assert not torch.allclose(r[0, 0, 1], x[0, 0, 1], atol=1e-3)
+    by_offset = [(r[0, 0, o] @ r[0, 0, 0]).item() for o in (1, 3, 7)]
+    assert max(by_offset) - min(by_offset) > 1e-2, "score does not depend on offset"
 
 
 # --- cache accounting -------------------------------------------------------
