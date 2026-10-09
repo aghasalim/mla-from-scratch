@@ -14,3 +14,8 @@
 **Tried:** six variants, identical depth width data batch steps and seed, only the attention module changing. Char level Shakespeare, 4 layers, 192 wide, 1500 steps, 3 seeds each. 1904 s on an M4 CPU.
 **Measured:** every one of the 18 runs landed between 4.500 and 4.600 validation perplexity. Spread between variant medians 0.081; mean spread between seeds of the same variant 0.058; ratio 1.41. At matched budget (256 elements/token) MQA scored 4.538 and MLA 4.563, a gap of 0.025 while MLA's own seeds spanned 0.080.
 **Concluded:** nothing is separated and I should have seen this coming. The tell is that MHA has six times the cache of MQA and cannot beat it either, which points at the experiment rather than the methods. A 1.7M parameter model on 1M characters at 128 context has no KV bottleneck to relieve, so there is nothing for cache design to trade against. The mistake was building the comparison before estimating seed noise and asking how big the model needed to be for the expected effect to clear it. Doing that first would have cost ten minutes and saved thirty two. Reporting it as a null rather than picking the seed where MLA wins.
+
+## 2026-10-10, the RoPE offset test could not fail
+**Tried:** replaced `apply_rope` with a function that returns its input and ran the RoPE tests.
+**Measured:** the offset test still passed, because a constant vector dotted with itself gives the same score at every position whether or not anything rotates.
+**Concluded:** the test now also requires position 1 to differ from the input and the score to change with the offset. With the no-op it fails.
