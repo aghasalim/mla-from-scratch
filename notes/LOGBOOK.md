@@ -19,6 +19,7 @@
 **Tried:** replaced `apply_rope` with a function that returns its input and ran the RoPE tests.
 **Measured:** the offset test still passed, because a constant vector dotted with itself gives the same score at every position whether or not anything rotates.
 **Concluded:** the test now also requires position 1 to differ from the input and the score to change with the offset. With the no-op it fails.
+
 ## 2026-10-10, removed an unused RoPE check
 **Tried:** looked for callers of `relative_score_is_position_invariant` in `mla/rope.py`.
 **Measured:** none. It also built a list of scores it then deleted without reading, and its comment admitted the check only works on constant inputs.
