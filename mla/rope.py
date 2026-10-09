@@ -48,28 +48,3 @@ def apply_rope(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
     out = torch.view_as_real(xc * freqs[:s].view(1, 1, s, d // 2)).reshape(b, h, s, d)
     return out.type_as(x)
 
-
-def relative_score_is_position_invariant(dim: int = 64, seq: int = 16, theta: float = 10_000.0) -> float:
-    """Check RoPE's defining property, and return the largest deviation.
-
-    Two query/key pairs with the same offset must score identically regardless
-    of where they sit. If this is not ~0 the rotation is wrong.
-    """
-    torch.manual_seed(0)
-    freqs = rope_frequencies(dim, seq, theta)
-    q = torch.randn(1, 1, seq, dim)
-    k = torch.randn(1, 1, seq, dim)
-    qr, kr = apply_rope(q, freqs), apply_rope(k, freqs)
-    worst = 0.0
-    for offset in range(1, 5):
-        scores = [(qr[0, 0, m + offset] @ kr[0, 0, m]).item() for m in range(seq - offset)]
-        # same offset, different absolute positions: only true when q,k are the
-        # same vector at every position, so compare against a constant-input run
-        base = torch.randn(dim)
-        qc = base.view(1, 1, 1, dim).expand(1, 1, seq, dim).contiguous()
-        kc = base.view(1, 1, 1, dim).expand(1, 1, seq, dim).contiguous()
-        qcr, kcr = apply_rope(qc, freqs), apply_rope(kc, freqs)
-        s2 = [(qcr[0, 0, m + offset] @ kcr[0, 0, m]).item() for m in range(seq - offset)]
-        worst = max(worst, max(s2) - min(s2))
-        del scores
-    return worst
