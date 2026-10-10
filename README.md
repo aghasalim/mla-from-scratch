@@ -6,26 +6,28 @@
 [![results](https://img.shields.io/badge/results-reproducible-1a9850.svg)](results/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23003662.svg)](https://doi.org/10.5281/zenodo.23003662)
 
-Multi-head latent attention, built from the DeepSeek V2 paper. Low rank KV
-compression, decoupled RoPE, and the absorption trick that lets inference skip
-reconstructing keys and values entirely.
+I built multi-head latent attention from the DeepSeek V2 paper. That includes
+low rank KV compression, decoupled RoPE, and the absorption trick that lets
+inference skip rebuilding keys and values altogether.
 
-Two results here, and they are of very different strength. The cache accounting
-is exact and large. The quality comparison is a null, and I think the right reading is that my experiment is too small to see the effect, not that
-the effect is absent. Neither is taken on trust. The committed results and the
-golden vectors get rebuilt from the raw shape parameters in C, Rust, Go, R, SQL,
-Ruby and JavaScript under `verify/`, and one disagreement anywhere turns CI red.
+I got two results, and one is much stronger than the other. The cache accounting
+is exact and the savings are big. The quality comparison came out null. My read
+is that my experiment was too small to see an effect, which isn't the same as
+there being no effect. I don't just trust either result. Under `verify/` the
+committed results and golden vectors are rebuilt from the raw shape parameters
+in C, Rust, Go, R, SQL, Ruby and JavaScript, and any disagreement turns CI red.
 
 ## The problem
 
-A transformer serving long context spends most of its memory on the KV cache,
-not on weights. At 128k context a 60 layer model with 32 heads of width 128
-needs 120 GB of cache in fp16. That is the wall.
+When a transformer serves long context, most of its memory goes to the KV cache
+and not to the weights. At 128k context a 60 layer model with 32 heads of width
+128 needs 120 GB of cache in fp16.
 
-GQA and MQA answer by sharing KV heads. Fewer heads, less cache, some quality
-loss. MLA answers differently: project K and V jointly down to one small latent
-vector per token, cache only that, and fold the up projections into the
-neighbouring weight matrices so inference never decompresses.
+GQA and MQA deal with this by sharing KV heads. Fewer heads means less cache and
+some loss in quality. MLA takes another route. It projects K and V together down
+to one small latent vector per token and caches only that. The up projections
+get folded into the neighbouring weight matrices, so inference never has to
+decompress.
 
 ![KV cache per token and at 128k context](results/cache.png)
 
@@ -39,25 +41,25 @@ neighbouring weight matrices so inference never decompresses.
 | **MLA** | **576** | **14.22x** | **8.44** |
 | MLA without decoupled RoPE | 512 | 16.00x | 7.50 |
 
-These are arithmetic, so there is no error bar. MLA is
+These are plain arithmetic, so there's no error bar. MLA is
 `d_c + d_rope = 512 + 64`.
 
-The last row is the price of decoupled RoPE: 64 extra elements per token, 0.94 GB
-at 128k context, which buys the ability to absorb the up projections at all. It
-is not a variant you would deploy, since without decoupled RoPE you have to
-reconstruct every key at every step and the whole point is lost. It is in the
-table because the cost of the fix is worth knowing.
+The last row shows what decoupled RoPE costs. It's 64 extra elements per token,
+or 0.94 GB at 128k context, and it's what makes absorbing the up projections
+possible in the first place. You wouldn't deploy that variant. Without decoupled
+RoPE you have to rebuild every key at every step, which defeats the purpose. I
+left it in because I wanted to know what the fix costs.
 
-MQA is smaller still, which is the point of the quality question below: MQA
-already gives you 32x, so MLA only earns its complexity if it holds quality
+MQA is even smaller. That's why the quality question below matters. MQA already
+gives you 32x, so MLA is only worth the extra complexity if it keeps quality
 better at the same budget.
 
 ![KV cache filling as the context grows, full cache against the latent cache](results/cache-growth.gif)
 
-The same arithmetic as the table, watched as the context fills. Shape is held
-fixed at the DeepSeek V2 numbers (32 heads of width 128, d_c=512, d_rope=64,
-60 layers, fp16) and only the sequence length moves. The dashed line is one
-80 GB H100.
+This is the same arithmetic as the table, animated as the context fills up. I
+kept the shape fixed at the DeepSeek V2 numbers (32 heads of width 128, d_c=512,
+d_rope=64, 60 layers, fp16) and only the sequence length changes. The dashed line
+is one 80 GB H100.
 
 ## Absorption, and why RoPE breaks it
 
@@ -66,42 +68,43 @@ score is
 
     q_m . k_n = (W_Q x_m) . (W_UK c_n) = x_m^T W_Q^T W_UK c_n
 
-so `W_UK` can be folded into `W_Q` once, and `k_n` never has to exist. The same
-works on the value side: attending over the latents and up projecting once at
-the end lets `W_UV` fold into `W_O`. Both are just associativity.
+so `W_UK` can be folded into `W_Q` once, and `k_n` never needs to exist. The
+value side works the same way. If you attend over the latents and up project
+once at the end, `W_UV` folds into `W_O`. Both follow from associativity.
 
-RoPE ruins it. Rotary embeddings put a position dependent rotation between the
+RoPE breaks this. Rotary embeddings put a position dependent rotation between the
 two matrices,
 
     q_m^T R_(n-m) W_UK c_n
 
-and `R` depends on the token index, so there is no fixed matrix to pre multiply.
-Decoupled RoPE is the fix: carry a small set of extra channels that are not
-compressed, apply RoPE only there, and leave the compressed path rotation free.
-The score becomes a sum of an absorbed content term and a small positional term.
+and `R` depends on the token index, so there's no fixed matrix to multiply in
+ahead of time. Decoupled RoPE gets around this. You keep a small set of extra
+channels uncompressed, apply RoPE only to those, and leave the compressed path
+without rotation. The score is then an absorbed content term plus a small
+positional term.
 
-This repo implements both, and `AbsorbedMLA` refuses to construct itself from a
-model that does not use decoupled RoPE, so it cannot silently fold something wrong.
+I implemented both. `AbsorbedMLA` won't build itself from a model that doesn't
+use decoupled RoPE, so it can't quietly fold the wrong thing.
 
-**The check that matters:** absorbed inference is asserted to be numerically
-identical to the naive form, across three latent widths and three sequence
-lengths including 1. Measured agreement is 8.3e-07 max absolute difference, the
-worst case over that grid on this laptop, and 7.7e-07 on the CI runner. That
-spread is float32 accumulating in a different order, not error: in double
-precision the two paths agree to 3.9e-16, which the C in `verify/` measures. If
-the folding were wrong both versions would still produce plausible attention
-output, so this test is the only thing that can catch it.
+The most important test checks that absorbed inference gives the same numbers as
+the naive form, across three latent widths and three sequence lengths including
+1. The max absolute difference is 8.3e-07, the worst case over that grid on my
+laptop, and 7.7e-07 on the CI runner. That gap comes from float32 adding things
+up in a different order. It isn't a bug. In double precision the two paths agree
+to 3.9e-16, which the C in `verify/` measures. If the folding were wrong, both
+versions would still give plausible looking attention output, so this test is
+the only thing that would catch it.
 
 ## Quality at matched budget, and why this part is weak
 
-Six variants, same depth, width, data, batch, steps and seed, only the attention
-module changing. The six do not separate. All 18 runs land between 4.50 and 4.60
-validation perplexity: the spread between variant medians is 0.081, the mean
-spread between seeds of one variant is 0.058, and a ratio of 1.41 is not enough
-to call anything. At the matched budget of 256 elements per token MQA scores
-4.538 and MLA 4.563, a gap of 0.025 while MLA's own three seeds span 0.080. MHA
-carries six times the cache of MQA and still cannot beat it, which is the sign
-that the experiment is the limit here and not the method.
+I trained six variants with the same depth, width, data, batch, steps and seed,
+changing only the attention module. They don't separate. All 18 runs land between
+4.50 and 4.60 validation perplexity. The spread between variant medians is 0.081.
+The mean spread between seeds of one variant is 0.058. A ratio of 1.41 isn't
+enough to call anything. At the matched budget of 256 elements per token MQA
+scores 4.538 and MLA 4.563. That gap is 0.025, while MLA's own three seeds span
+0.080. MHA has six times the cache of MQA and still can't beat it, which tells me
+the experiment is what's limiting here, more than the method.
 
 ![quality against cache budget](results/quality.png)
 ![validation curves](results/curves.png)
@@ -110,16 +113,17 @@ Full detail in [notes/METHODS.md](notes/METHODS.md#quality-at-matched-budget-and
 
 ## Two things I got wrong
 
-I assumed the quality experiment would show something. I built the whole
-matched budget comparison before checking whether the setup had the resolution
-to detect the effect. Estimating seed noise first would have cost about ten
-minutes and shown that 0.058 of noise buries the 0.025 gap I was looking for, so
-the 32 minute sweep went on a table that cannot answer its own question. The
-other one is that I nearly shipped `AbsorbedMLA` with no equality test against
-the naive path. It produced sensible looking attention from the first run, and
-the einsum index order in that first version was wrong.
+I assumed the quality experiment would show something. I built the whole matched
+budget comparison before checking if the setup could even detect the effect.
+Measuring seed noise first would have taken about ten minutes. It would have shown
+me that 0.058 of noise hides the 0.025 gap I was looking for. Instead the 32
+minute sweep went into a table that can't answer its own question.
 
-Both mistakes are written up at length in
+I also nearly shipped `AbsorbedMLA` without an equality test against the naive
+path. It gave sensible looking attention from the first run, and the einsum index
+order in that first version was wrong.
+
+I wrote up both mistakes in more detail in
 [notes/METHODS.md](notes/METHODS.md#what-i-got-wrong).
 
 ## Reproducing this
@@ -146,8 +150,8 @@ python -m bench.figures
 ```
 
 The training sweep takes about 32 minutes on an M4 CPU. `bench.cache` is instant
-because it is arithmetic. Figures read the committed CSVs and never re measure.
-What the 18 runs were configured with is in [notes/RECIPE.md](notes/RECIPE.md).
+because it's just arithmetic. The figures read the committed CSVs and never
+re measure. The config for the 18 runs is in [notes/RECIPE.md](notes/RECIPE.md).
 
 ## Where things live
 
@@ -171,14 +175,14 @@ verify/            seven other languages, arriving at the same numbers
 - **Pope, Douglas, Chowdhery et al. Efficiently Scaling Transformer Inference. MLSys 2023.** [arXiv:2211.05102](https://arxiv.org/abs/2211.05102) Why the KV cache is the serving bottleneck in the first place.
 - Corpus is tiny Shakespeare, from Karpathy's char-rnn.
 
-Related: [flash-attention-from-scratch](https://github.com/aghasalim/flash-attention-from-scratch)
-attacks the same memory wall from the kernel side.
+Related: in [flash-attention-from-scratch](https://github.com/aghasalim/flash-attention-from-scratch)
+I go after the same memory problem from the kernel side.
 
 ## Methodology
 
-[`METHODOLOGY.md`](METHODOLOGY.md) has the standing rules. Rule 10 is the one
-doing work here: report the spread as well as the point estimate. Follow it and
-the quality table has to be called a null, which is what the section above does.
+[`METHODOLOGY.md`](METHODOLOGY.md) has the rules I follow. Rule 10 matters most
+here. It says to report the spread along with the point estimate. Once I did that,
+I had to call the quality table a null, and that's what the section above does.
 
 ## License
 
