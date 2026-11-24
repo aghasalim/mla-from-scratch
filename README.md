@@ -1,5 +1,3 @@
-<p align="center"><img src="assets/banner.jpg" alt="Line drawing of wide beams passing through a narrow bottleneck, beside a stack of memory blocks that shrinks" width="100%"></p>
-
 # The KV cache is the wall. MLA is one way through it.
 
 [![ci](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml)
