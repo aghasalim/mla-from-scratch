@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.jpg" alt="Line drawing of wide beams passing through a narrow bottleneck, beside a stack of memory blocks that shrinks" width="100%"></p>
+
 # The KV cache is the wall. MLA is one way through it.
 
 [![ci](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml/badge.svg)](https://github.com/aghasalim/mla-from-scratch/actions/workflows/ci.yml)
@@ -16,6 +18,22 @@ is that my experiment was too small to see an effect, which isn't the same as
 there being no effect. I don't just trust either result. Under `verify/` the
 committed results and golden vectors are rebuilt from the raw shape parameters
 in C, Rust, Go, R, SQL, Ruby and JavaScript, and any disagreement turns CI red.
+
+<details>
+<summary>Contents</summary>
+
+- [The problem](#the-problem)
+- [Absorption, and why RoPE breaks it](#absorption-and-why-rope-breaks-it)
+- [Quality at matched budget, and why this part is weak](#quality-at-matched-budget-and-why-this-part-is-weak)
+- [Two things I got wrong](#two-things-i-got-wrong)
+- [Reproducing this](#reproducing-this)
+- [Where things live](#where-things-live)
+- [Papers](#papers)
+- [Methodology](#methodology)
+- [Citation](#citation)
+- [License](#license)
+
+</details>
 
 ## The problem
 
@@ -183,6 +201,21 @@ I go after the same memory problem from the kernel side.
 [`METHODOLOGY.md`](METHODOLOGY.md) has the rules I follow. Rule 10 matters most
 here. It says to report the spread along with the point estimate. Once I did that,
 I had to call the quality table a null, and that's what the section above does.
+
+## Citation
+
+If you use this work, please cite it. The same record is in [`CITATION.cff`](CITATION.cff).
+
+```bibtex
+@software{mustafazada2026mlafromscratch,
+  author  = {Mustafazada, Aghasalim},
+  title   = {Multi-head Latent Attention from scratch},
+  year    = {2026},
+  version = {1.0.1},
+  doi     = {10.5281/zenodo.23003662},
+  url     = {https://github.com/aghasalim/mla-from-scratch}
+}
+```
 
 ## License
 
